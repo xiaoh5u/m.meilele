@@ -6,41 +6,9 @@
 
     <div id="nav" v-show="isNav">
       <ul>
-        <li @click="activeA" :class="{active:index==1}">
-          <router-link to="/home">
-            <img
-              :src="index==1?require('@/assets/images/OnHome.png'):require('@/assets/images/Home.png')"
-              alt
-            />
-            <p>首页</p>
-          </router-link>
-        </li>
-        <li @click="activeB" :class="{active:index==2}">
-          <router-link to="/classify">
-            <img
-              :src="index==2?require('@/assets/images/OnClassify.png'):require('@/assets/images/Classify.png')"
-              alt
-            />
-            <p>分类</p>
-          </router-link>
-        </li>
-        <li @click="activeC" :class="{active:index==3}">
-          <router-link to="/cart">
-            <img
-              :src="index==3?require('@/assets/images/OnCart.png'):require('@/assets/images/Cart.png')"
-              alt
-            />
-            <p>购物车</p>
-          </router-link>
-        </li>
-        <li @click="activeD" :class="{active:index==4}">
-          <router-link to="/mine">
-            <img
-              :src="index==4?require('@/assets/images/OnMine.png'):require('@/assets/images/Mine.png')"
-              alt
-            />
-            <p>我的</p>
-          </router-link>
+        <li v-for="(item,index) in bottomNav" :key="index" @click="jump(item.to)">
+          <img :src="routerName==item.to?item.enter:item.out" alt />
+          <p>{{item.name}}</p>
         </li>
       </ul>
     </div>
@@ -49,34 +17,58 @@
 
 <script>
 export default {
+  
   data() {
     return {
       isNav: false,
-      index: 1
+      index: 1,
+      routerName: "",
+      token: "",
+      bottomNav: [
+        {
+          name: "首页",
+          to: "/home",
+          enter: require("@/assets/images/OnHome.png"),
+          out: require("@/assets/images/Home.png")
+        },
+        {
+          name: "分类",
+          to: "/classify",
+          enter: require("@/assets/images/OnClassify.png"),
+          out: require("@/assets/images/Classify.png")
+        },
+        {
+          name: "购物车",
+          to: "/cart",
+          enter: require("@/assets/images/OnCart.png"),
+          out: require("@/assets/images/Cart.png")
+        },
+        {
+          name: "我的",
+          to: "/mine",
+          enter: require("@/assets/images/OnMine.png"),
+          out: require("@/assets/images/Mine.png")
+        }
+      ]
     };
   },
   methods: {
-    activeA() {
-      this.index = 1;
-    },
-    activeB() {
-      this.index = 2;
-    },
-    activeC() {
-      this.index = 3;
-    },
-    activeD() {
-      this.index = 4;
+    jump(url) {
+      this.$router.push(url);
     }
   },
   mounted() {
     const name = this.$route.name;
+    this.routerName = "/" + name;
     this.isNav = /home|classify|cart|mine/.test(name);
+
+    this.token = localStorage.getItem("token");
   },
   watch: {
     $route(to, from) {
       // 跳转路由的时候，只在首页、商品和关于这几个路由中显示底部的导航
       this.isNav = /home|classify|cart|mine/.test(to.name);
+      this.routerName = "/" + to.name;
     }
   }
 };
@@ -158,6 +150,14 @@ body {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
+.sl3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
 
 #app {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
@@ -168,12 +168,12 @@ body {
 }
 #nav {
   position: fixed;
-    bottom: 0;
+  bottom: 0;
   ul {
     height: 1rem;
     width: 100vw;
     padding: 0 0.2rem;
-    
+
     display: flex;
     justify-content: space-around;
     align-items: center;

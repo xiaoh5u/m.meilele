@@ -1,16 +1,17 @@
 <template>
-  <div class="home">
+  <div class="home" ref='home'>
     <div class="header">
       <div class="top">
         <!-- logo -->
         <img :src="require('@/assets/images/logo.png')" alt />
         <!-- 搜索 -->
         <div class="search">
-          <p></p>
-          <div class="text">
-            <i class="iconfont icon-guanbi"></i>
-            <span>搜索商品</span>
-          </div>
+          <router-link to="/search">
+            <div class="text">
+              <i class="iconfont icon-guanbi"></i>
+              <span>搜索商品</span>
+            </div>
+          </router-link>
         </div>
         <!-- 选择所在城市 -->
         <div class="choice">
@@ -20,12 +21,9 @@
       </div>
       <!-- 头部导航栏 -->
       <div class="nav">
-        <span
-          @click="onActive(index)"
-          :class="{on:num == index}"
-          v-for="(item,index) in navTitle"
-          :key="index"
-        >{{item}}</span>
+        <cube-tab-bar v-model="selectedLabelSlots" show-slider inline>
+          <cube-tab v-for="(item, index) in tabs" :label="item.label" :key="index">{{item.label}}</cube-tab>
+        </cube-tab-bar>
       </div>
     </div>
 
@@ -40,7 +38,7 @@
 
     <!-- 中间导航 -->
     <ul class="midNav">
-      <li v-for="(item,index) in midIcon" :key="index">
+      <li v-for="(item,index) in midIcon" :key="index" @click="toList(item.type)">
         <img :src="'http://image.meilele.com/images/201907/'+item.img" alt />
         <p class="sl">{{item.name}}</p>
       </li>
@@ -55,7 +53,11 @@
         </div>
 
         <ul class="saleGoods">
-          <li v-for="(item,index) in groupBuyList" :key="index">
+          <li
+            v-for="(item,index) in groupBuyList"
+            :key="index"
+            @click="toDetail(item.good_url,randomList[index],item.id)"
+          >
             <img class="goodsImg" :src="'https://image.meilele.com/'+item.img_url" alt />
             <p class="time">
               <i></i>
@@ -115,59 +117,69 @@
         </div>
       </div>
 
-      <!-- 全屋套系//手动轮播组件 -->
+     
       <div class="clickSwipe">
-        <div class="title">全屋套系</div>
-        <div class="choise">
-          <span
-            v-for="(item,index) in choiseName"
-            :key="index"
-            :class="{active:index==ins}"
-          >{{item}}</span>
-        </div>
-        <mt-swipe :auto="0" :show-indicators="false" @change="handleChange">
-          <mt-swipe-item v-for="(item,index) in qwlist" :key="index">
-            <div class="swipeModle">
-              <!-- 上方图片部分 -->
-              <div class="top">
-                <img :src="item.bigImg" alt />
-                <span class="label"></span>
-                <i class="arrow"></i>
+        <template>
+          <cube-tab-bar v-model="selectedLabel" show-slider>
+            <cube-tab v-for="(item, index) in qwlist" :label="item.label" :key="index"></cube-tab>
+          </cube-tab-bar>
+          <cube-tab-panels v-model="selectedLabel">
+            <cube-tab-panel v-for="(item, index) in qwlist" :label="item.label" :key="index">
+              <div class="swipeModle">
+                <!-- 上方图片部分 -->
+                <div class="top">
+                  <img :src="item.bigImg" alt />
+                  <span class="label"></span>
+                  <i class="arrow"></i>
+                </div>
+                <!-- 下方小图 -->
+                <ul class="bottom">
+                  <li v-for="(itemInfo,index) in item.bottom" :key="index">
+                    <img :src="itemInfo.smallImg" />
+                    <p class="goodsName">{{itemInfo.goodsName}}</p>
+                    <p class="price">￥{{itemInfo.goodsPrice}}</p>
+                  </li>
+                </ul>
               </div>
-              <!-- 下方小图 -->
-              <ul class="bottom">
-                <li v-for="(itemInfo,index) in item.bottom" :key="index">
-                  <img :src="itemInfo.smallImg" />
-                  <p class="goodsName">{{itemInfo.goodsName}}</p>
-                  <p class="price">￥{{itemInfo.goodsPrice}}</p>
-                </li>
-              </ul>
-            </div>
-          </mt-swipe-item>
-        </mt-swipe>
+            </cube-tab-panel>
+          </cube-tab-panels>
+        </template>
       </div>
 
-      <!-- 猜你喜欢 -->
-      <div class="like">
-        <div class="title">猜你喜欢</div>
-        <ul>
-          <li v-for="(item,index) in LikeGoodsList" :key="index">
-            <img v-lazy="'https://image.meilele.com/'+item.goods_thumb" alt />
-            <p class="goodsPrice">
-              ￥{{item.show_price}}
-              <span v-show="item.activity_search_name_List">促销</span>
-            </p>
-            <p class="goodsTitle sl">{{item.new_goods_name}}</p>
-            <p class="sale">已售{{randomList[index]}}</p>
-          </li>
-        </ul>
-      </div>
+
+
+       <!-- 猜你喜欢 -->
+    <div class="like">
+      <div class="title">猜你喜欢</div>
+      <ul>
+        <li
+          v-for="(item,index) in LikeGoodsList"
+          :key="index"
+          @click="toDetail(item.goods_uri,randomList[index],item.id)"
+        >
+          <img v-lazy="'https://image.meilele.com/'+item.goods_thumb" alt />
+          <p class="goodsPrice">
+            ￥{{item.show_price}}
+            <span v-show="item.activity_search_name_List">促销</span>
+          </p>
+          <p class="goodsTitle sl">{{item.new_goods_name}}</p>
+          <p class="sale">已售{{randomList[index]}}</p>
+        </li>
+      </ul>
     </div>
+    </div>
+
+       <BackToTop/>
+
   </div>
 </template>
 
 <script>
+import BackToTop from "@/components/BackToTop.vue";
 export default {
+  components:{
+    BackToTop
+  },
   data() {
     return {
       navTitle: [
@@ -180,7 +192,45 @@ export default {
         "实木家具",
         "地板"
       ],
-      choiseName: ["客厅", "卧室", "餐厅"],
+      selectedLabel: "客厅",
+      choiseName: [
+        {
+          label: "客厅"
+        },
+        {
+          label: "卧室"
+        },
+        {
+          label: "餐厅"
+        }
+      ],
+      selectedLabelSlots: "首页",
+      tabs: [
+        {
+          label: "首页"
+        },
+        {
+          label: "新品"
+        },
+        {
+          label: "每日特卖"
+        },
+        {
+          label: "沙发"
+        },
+        {
+          label: "床"
+        },
+        {
+          label: "床垫"
+        },
+        {
+          label: "实木家具"
+        },
+        {
+          label: "地板"
+        }
+      ],
       swiperList: [
         "http://image.meilele.com/images/201812/1544662133279151921.jpg",
         "http://image.meilele.com/images/201907/1564091856054255759.jpg"
@@ -208,15 +258,18 @@ export default {
         },
         {
           name: "沙发",
-          img: "1563131093521181710.jpg"
+          img: "1563131093521181710.jpg",
+          type: "shafa"
         },
         {
           name: "床",
-          img: "1563131115705453289.jpg"
+          img: "1563131115705453289.jpg",
+          type: "chuang"
         },
         {
           name: "床垫",
-          img: "1563131129464675923.jpg"
+          img: "1563131129464675923.jpg",
+          type: "chuangdian"
         }
       ],
       groupBuyList: [],
@@ -225,6 +278,7 @@ export default {
       ins: 0,
       qwlist: [
         {
+          label: "客厅",
           bigImg:
             "https://img003.mll3321.com//images/upload/201908/c8611e94cde8058e1f869ed2b4b79b1f.jpg",
 
@@ -250,6 +304,7 @@ export default {
           ]
         },
         {
+          label: "卧室",
           bigImg:
             "https://image.meilele.com//images/upload/201908/a3176c7dece9e9608aa04292f940f928.jpg",
 
@@ -275,6 +330,7 @@ export default {
           ]
         },
         {
+          label: "餐厅",
           bigImg:
             "https://image.meilele.com//images/upload/201908/279d1013b54970936d3511255507d623.jpg",
 
@@ -304,8 +360,19 @@ export default {
       randomList: []
     };
   },
-  components: {},
   methods: {
+    //跳转到列表页
+    toList(type) {
+      if (type) {
+        this.$router.push("/goodslist/" + type);
+      }
+    },
+    toDetail(url, saleNum, id) {
+      const info = [url, saleNum, id];
+      sessionStorage.setItem("info", info);
+      this.$router.push("/goodsdetail");
+    },
+
     //头部导航栏选中效果
     onActive(index) {
       this.num = index;
@@ -373,9 +440,7 @@ export default {
       for (let i = 0; i < 30; i++) {
         this.randomList.push(parseInt(Math.random() * 30500) + 500);
       }
-    },
-    
-   
+    }
   },
   mounted() {
     //获取限时抢购商品
@@ -420,6 +485,7 @@ export default {
       img {
         width: 100%;
       }
+     
       &:nth-of-type(2n) {
         margin-left: 2%;
       }
@@ -446,11 +512,11 @@ export default {
 }
 
 .clickSwipe {
-  height: 9.8rem;
-  padding: 0 0.2rem;
+  height: 9rem;
+  padding: .5rem 0.2rem;
   background: #fff;
-  /deep/.mint-swipe {
-    height: 80%;
+  .cube-tab-bar{
+    padding-bottom: .1rem;
   }
   img {
     width: 100%;
@@ -540,6 +606,7 @@ export default {
       .price {
         color: #c81c28;
         font-size: 0.3rem;
+        margin-top: .1rem;
       }
     }
     .left {
@@ -572,6 +639,9 @@ export default {
 }
 .header {
   background-color: #fff;
+  position:fixed;
+  top:0;
+  z-index: 999;
   .top {
     display: flex;
     justify-content: flex-start;
@@ -583,7 +653,8 @@ export default {
     }
     .search {
       position: relative;
-      p {
+      a {
+        display: inline-block;
         width: 3.85rem;
         border-radius: 0.1rem;
         height: 0.58rem;
@@ -619,21 +690,19 @@ export default {
     }
   }
 
-  .nav {
+  /deep/.cube-tab-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     overflow-y: scroll;
     margin-top: 0.1rem;
 
-    span {
+    .cube-tab {
       font-size: 0.29rem;
       margin: 0 0.15rem;
       padding: 0 0.1rem 0.14rem 0.1rem;
+      flex: auto;
       flex-shrink: 0;
-    }
-    .on {
-      border-bottom: 2px solid black;
     }
   }
 }
@@ -642,6 +711,7 @@ export default {
   width: 100%;
   height: 3.6rem;
   overflow: hidden;
+  margin-top: 1.4rem;
   img {
     width: 100%;
   }
@@ -651,6 +721,7 @@ export default {
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
+  padding-bottom: .1rem;
   li {
     width: 25%;
   }
@@ -700,7 +771,7 @@ export default {
       }
       .time {
         width: 90%;
-        margin: 0.12rem 0 0.12rem 2%;
+        margin: 0.12rem 0 0.12rem 5%;
         background-color: #fff4e6;
         border-radius: 0.12rem;
         height: 0.38rem;
